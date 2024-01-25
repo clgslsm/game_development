@@ -140,7 +140,7 @@ class GameManager:
         loop = True
         initial_interval = 1
         num_moles = 3
-        hole_nums = random.sample(range(-1, 15), num_moles)
+        hole_nums = random.sample(range(0, 15), num_moles)
         used_hole_nums = hole_nums
         Moles = []
         for hole_num in hole_nums:
