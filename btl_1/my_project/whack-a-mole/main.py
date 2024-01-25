@@ -4,6 +4,16 @@ from pygame import *
 
 
 class GameManager:
+    class Moles:
+        def __init__(self, mole, hole_num):
+            self.mole = mole
+            self.hole_num = hole_num
+            self.is_down = False
+            self.num = -1
+            self.left = 0
+            self.interval = 0.1
+            self.cycle_time = 0
+            self.last_time = 0
     def __init__(self):
         # Define constants
         self.SCREEN_WIDTH = 700
@@ -127,84 +137,103 @@ class GameManager:
     # Start the game's main loop
     # Contains some logic for handling animations, mole hit events, etc..
     def game_loop(self):
-        cycle_time = 0
-        num = -1
         loop = True
-        is_down = False
-        interval = 0.1
         initial_interval = 1
-        hole_num = 0
+        num_moles = 3
+        hole_nums = random.sample(range(-1, 15), num_moles)
+        used_hole_nums = hole_nums
+        Moles = []
+        for hole_num in hole_nums:
+            Moles.append(self.Moles(self.mole, hole_num))
+        for Mole in Moles:
+            Mole.last_time = pygame.time.get_ticks()
         left = 0
         # Time control variables
         clock = pygame.time.Clock()
         # Initialize timer variables
         start_time = pygame.time.get_ticks()
-        timer_limit = 10  # 90 seconds
+        timer_limit = 60  # 90 seconds
         self.timer = timer_limit
-
         for i in range(len(self.mole)):
             self.mole[i].set_colorkey((0, 0, 0))
             self.mole[i] = self.mole[i].convert_alpha()
-
         while loop:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     loop = False
                 if event.type == MOUSEBUTTONDOWN and event.button == self.LEFT_MOUSE_BUTTON:
                     self.soundEffect.playFire()
-                    if self.is_mole_hit(mouse.get_pos(), self.hole_positions[hole_num]) and num > 0 and left == 0:
-                        num = 3
-                        left = 14
-                        is_down = False
-                        interval = 0
-                        self.score += 1  # Increase player's score
-                        self.level = self.get_player_level()  # Calculate player's level
-                        # Stop popping sound effect
-                        self.soundEffect.stopPop()
-                        # Play hurt sound
-                        self.soundEffect.playHurt()
-                        self.update()
+                    for Mole in Moles:
+                        if (Mole.hole_num < 0): Mole.hole_num = random.randint(0, 14)
+                        if self.is_mole_hit(mouse.get_pos(), self.hole_positions[Mole.hole_num]) and Mole.num > 0 and Mole.left == 0:
+                            Mole.num = 3
+                            Mole.left = 14
+                            Mole.is_down = False
+                            Mole.interval = 0
+                            self.score += 1  # Increase player's score
+                            self.level = self.get_player_level()  # Calculate player's level
+                            # Stop popping sound effect
+                            self.soundEffect.stopPop()
+                            # Play hurt sound
+                            self.soundEffect.playHurt()
+                            self.update()
+                        else:
+                            self.misses += 1 
+                            self.update()   
+            for Mole in Moles:  
+                if (Mole.hole_num < 0): Mole.hole_num = random.randint(0, 14)
+                current_time = pygame.time.get_ticks()
+                sec = (current_time - Mole.last_time) / 1000.0
+                Mole.last_time = pygame.time.get_ticks()
+                # if Mole.num > 5:
+                #     self.screen.blit(self.background, (0, 0))
+                #     self.update()
+                #     Mole.num = -1
+                #     Mole.left = 0
+                # if Mole.num == -1:
+                #     self.screen.blit(self.background, (0, 0))
+                #     self.update()
+                #     Mole.num = 0
+                #     Mole.is_down = False
+                #     Mole.interval = 0.5
+                #     Mole.hole_num = random.randint(-1, 14)
+                Mole.cycle_time += sec
+                if (Mole.cycle_time > Mole.interval):
+                    self.screen.blit(self.background, (0, 0))
+                    for Mole_ in Moles:
+                        if Mole_.num > 5:
+                            self.update()
+                            Mole_.num = -1
+                            Mole.left = 0
+                        if Mole_.num == -1:
+                            self.update()
+                            Mole_.num = 0
+                            Mole_.is_down = False
+                            Mole_.interval = 0.5
+                            # Random in hole not in used_hole_nums
+                            used_hole_nums.remove(Mole_.hole_num)
+                            Mole_.hole_num = random.choice([i for i in range(15) if i not in used_hole_nums])
+                            used_hole_nums.append(Mole_.hole_num)
+                        if (Mole_.hole_num < 0): continue
+                        pic = self.mole[Mole_.num]
+                        self.screen.blit(pic, self.hole_positions[Mole_.hole_num])
+                    self.update()
+                    if Mole.is_down == False:
+                        Mole.num += 1
                     else:
-                        self.misses += 1
-                        self.update()
-
-            if num > 5:
-                self.screen.blit(self.background, (0, 0))
-                self.update()
-                num = -1
-                left = 0
-
-            if num == -1:
-                self.screen.blit(self.background, (0, 0))
-                self.update()
-                num = 0
-                is_down = False
-                interval = 0.5
-                hole_num = random.randint(0, 14)
-
-            mil = clock.tick(self.FPS)
-            sec = mil / 1000.0
-            cycle_time += sec
-            # cycle_time > interval
-            if (cycle_time > interval):
-                pic = self.mole[num]
-                self.screen.blit(self.background, (0, 0))
-                self.screen.blit(pic, (self.hole_positions[hole_num][0] - left, self.hole_positions[hole_num][1]))
-                self.update()
-                if is_down is False:
-                    num += 1
-                else:
-                    num -= 1
-                if num == 4:
-                    interval = 0.3
-                elif num == 3:
-                    num -= 1
-                    is_down = True
-                    self.soundEffect.playPop()
-                    interval = self.get_interval_by_level(initial_interval)  # get the newly decreased interval value
-                else:
-                    interval = 0.1
-                cycle_time = 0
+                        Mole.num -= 1
+                    if Mole.num == 4:
+                        Mole.interval = 0.3
+                    elif Mole.num == 3:
+                        Mole.num -= 1
+                        Mole.is_down = True
+                        self.soundEffect.playPop()
+                        Mole.interval = self.get_interval_by_level(initial_interval)  # get the newly decreased interval value
+                    else:
+                        Mole.interval = 0.1
+                    Mole.cycle_time = 0
+                    # Delay a little time
+                    clock.tick(self.FPS)
             # Update the timer based on elapsed time
             current_time = pygame.time.get_ticks()
             elapsed_time = current_time - start_time
