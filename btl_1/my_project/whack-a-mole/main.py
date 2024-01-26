@@ -164,8 +164,8 @@ class GameManager:
                 if event.type == MOUSEBUTTONDOWN and event.button == self.LEFT_MOUSE_BUTTON:
                     self.soundEffect.playFire()
                     for Mole in Moles:
-                        if (Mole.hole_num < 0): Mole.hole_num = random.randint(0, 14)
-                        if self.is_mole_hit(mouse.get_pos(), self.hole_positions[Mole.hole_num]) and Mole.num > 0 and Mole.left == 0:
+                        if (Mole.hole_num < 0): continue
+                        if self.is_mole_hit(mouse.get_pos(), self.hole_positions[Mole.hole_num]) and Mole.num > 0:
                             Mole.num = 3
                             Mole.left = 14
                             Mole.is_down = False
