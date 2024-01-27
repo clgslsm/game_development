@@ -133,7 +133,7 @@ class GameManager:
         clock = pygame.time.Clock()
         # Initialize timer variables
         start_time = pygame.time.get_ticks()
-        timer_limit = 3  # 90 seconds
+        timer_limit = 10  # 90 seconds
         self.timer = timer_limit
 
         for i in range(len(self.mole)):

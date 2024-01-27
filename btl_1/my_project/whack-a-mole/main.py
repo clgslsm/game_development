@@ -2,7 +2,6 @@ import pygame
 import random
 from pygame import *
 
-
 class GameManager:
     class Moles:
         def __init__(self, mole, hole_num):
